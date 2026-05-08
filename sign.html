@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Safe System of Work — Sign-off</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a2e;
+    --ink-mid: #4a4a6a;
+    --ink-light: #8888aa;
+    --surface: #f7f6f3;
+    --white: #ffffff;
+    --accent: #c0392b;
+    --accent-dark: #96281b;
+    --accent-light: #fdf0ee;
+    --success: #1a7a4a;
+    --success-light: #edfaf3;
+    --border: #e2e0da;
+    --border-strong: #c8c5bc;
+    --warn: #d4720a;
+    --warn-light: #fff8ee;
+    --radius: 6px;
+    --shadow: 0 2px 12px rgba(26,26,46,0.08);
+    --shadow-lg: 0 8px 32px rgba(26,26,46,0.14);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--surface);
+    color: var(--ink);
+    min-height: 100vh;
+    font-weight: 300;
+  }
+
+  /* ── Header ── */
+  .site-header {
+    background: var(--ink);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .site-header .logo {
+    font-family: 'DM Serif Display', serif;
+    color: var(--white);
+    font-size: 1.1rem;
+    letter-spacing: 0.02em;
+  }
+  .site-header .badge {
+    background: var(--accent);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ── Layout ── */
+  .page-wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+
+  /* ── Meta block ── */
+  .doc-meta {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .doc-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.8rem;
+    line-height: 1.2;
+    color: var(--ink);
+  }
+  .doc-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 0.5rem;
+  }
+  .chip {
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border-strong);
+    color: var(--ink-mid);
+    background: var(--white);
+    white-space: nowrap;
+  }
+  .chip.dept { background: #eef2ff; border-color: #b0bcf0; color: #3347b0; }
+  .chip.ver  { background: var(--accent-light); border-color: #f0b0a8; color: var(--accent-dark); }
+
+  /* ── Reading required notice ── */
+  .read-notice {
+    background: var(--warn-light);
+    border: 1px solid #f0c88a;
+    border-left: 4px solid var(--warn);
+    border-radius: var(--radius);
+    padding: 0.9rem 1.1rem;
+    font-size: 0.85rem;
+    color: #7a4a08;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .read-notice svg { flex-shrink: 0; }
+
+  /* ── Document viewer ── */
+  .doc-viewer-wrap {
+    position: relative;
+    margin-bottom: 1.5rem;
+  }
+  .doc-viewer {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    height: 520px;
+    overflow-y: auto;
+    padding: 2.5rem 3rem;
+    font-size: 0.9rem;
+    line-height: 1.8;
+    color: var(--ink-mid);
+    scroll-behavior: smooth;
+    box-shadow: var(--shadow);
+  }
+  .doc-viewer h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.3rem;
+    color: var(--ink);
+    margin: 1.5rem 0 0.5rem;
+    font-weight: 400;
+  }
+  .doc-viewer h2:first-child { margin-top: 0; }
+  .doc-viewer p { margin-bottom: 0.9rem; }
+  .doc-viewer ul { margin: 0.5rem 0 0.9rem 1.5rem; }
+  .doc-viewer li { margin-bottom: 0.4rem; }
+  .doc-viewer .doc-end-marker {
+    border-top: 2px dashed var(--border);
+    margin-top: 2rem;
+    padding-top: 1rem;
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--ink-light);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* Scroll progress bar */
+  .scroll-progress-wrap {
+    height: 4px;
+    background: var(--border);
+    border-radius: 0 0 var(--radius) var(--radius);
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+  }
+  .scroll-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--warn));
+    transition: width 0.15s ease;
+    border-radius: 0 2px 2px 0;
+  }
+  .scroll-progress-bar.complete { background: var(--success); }
+
+  .scroll-label {
+    font-size: 0.75rem;
+    color: var(--ink-light);
+    text-align: right;
+    margin-bottom: 1.5rem;
+  }
+  .scroll-label span { font-weight: 500; color: var(--ink-mid); }
+
+  /* ── Sign-off panel ── */
+  .signoff-panel {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: opacity 0.4s, filter 0.4s;
+  }
+  .signoff-panel.locked {
+    opacity: 0.45;
+    filter: grayscale(0.3);
+    pointer-events: none;
+    user-select: none;
+  }
+  .signoff-panel-header {
+    background: var(--ink);
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+  }
+  .signoff-panel-header h3 {
+    font-family: 'DM Serif Display', serif;
+    color: var(--white);
+    font-size: 1.1rem;
+    font-weight: 400;
+  }
+  .lock-icon { color: var(--ink-light); transition: color 0.3s; }
+  .lock-icon.unlocked { color: #7ec8a0; }
+
+  .signoff-body { padding: 1.5rem; }
+
+  .unlock-notice {
+    background: var(--warn-light);
+    border: 1px solid #f0c88a;
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    font-size: 0.82rem;
+    color: #7a4a08;
+    margin-bottom: 1.2rem;
+    text-align: center;
+    transition: opacity 0.4s;
+  }
+  .unlock-notice.hidden { display: none; }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field.full { grid-column: 1 / -1; }
+  label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--ink-mid);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  input[type="text"], input[type="email"], select {
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    padding: 0.6rem 0.8rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 300;
+    color: var(--ink);
+    background: var(--surface);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input:focus, select:focus {
+    border-color: var(--ink);
+    box-shadow: 0 0 0 3px rgba(26,26,46,0.08);
+    background: var(--white);
+  }
+  input.prefilled {
+    background: #f0f0f8;
+    color: var(--ink-mid);
+    font-style: italic;
+  }
+
+  .declaration {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  .declaration-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0.6rem;
+  }
+  .declaration-item:last-child { margin-bottom: 0; }
+  .declaration-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .declaration-item label {
+    font-size: 0.85rem;
+    font-weight: 300;
+    color: var(--ink-mid);
+    text-transform: none;
+    letter-spacing: 0;
+    cursor: pointer;
+    line-height: 1.5;
+  }
+
+  .signature-field {
+    margin-bottom: 1.2rem;
+  }
+  .signature-input {
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius);
+    padding: 0.8rem 1rem;
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.3rem;
+    color: var(--ink);
+    background: var(--white);
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .signature-input:focus {
+    border-color: var(--ink);
+    box-shadow: 0 0 0 3px rgba(26,26,46,0.08);
+  }
+  .signature-hint {
+    font-size: 0.72rem;
+    color: var(--ink-light);
+    margin-top: 4px;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 0.9rem;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    letter-spacing: 0.02em;
+  }
+  .submit-btn:hover { background: var(--accent-dark); }
+  .submit-btn:active { transform: scale(0.99); }
+  .submit-btn:disabled {
+    background: var(--border-strong);
+    color: var(--ink-light);
+    cursor: not-allowed;
+  }
+
+  /* ── Error messages ── */
+  .field-error {
+    font-size: 0.72rem;
+    color: var(--accent);
+    margin-top: 3px;
+    display: none;
+  }
+  .field-error.show { display: block; }
+
+  /* ── Privacy notice ── */
+  .privacy-notice {
+    font-size: 0.72rem;
+    color: var(--ink-light);
+    margin-top: 0.8rem;
+    text-align: center;
+    line-height: 1.6;
+  }
+  .privacy-notice a { color: var(--ink-mid); }
+
+  /* ── Success screen ── */
+  .success-screen {
+    display: none;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    padding: 3rem 2rem;
+    text-align: center;
+  }
+  .success-screen.show { display: block; }
+  .success-icon {
+    width: 64px;
+    height: 64px;
+    background: var(--success-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.2rem;
+  }
+  .success-screen h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
+    margin-bottom: 0.5rem;
+    color: var(--ink);
+  }
+  .success-screen p { color: var(--ink-mid); font-size: 0.9rem; margin-bottom: 0.5rem; }
+  .success-ref {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    margin-top: 1.2rem;
+    font-size: 0.8rem;
+    color: var(--ink-mid);
+    word-break: break-all;
+  }
+  .success-ref strong { color: var(--ink); }
+
+  /* ── Error screen ── */
+  .error-screen {
+    display: none;
+    background: var(--accent-light);
+    border: 1px solid #f0b0a8;
+    border-radius: var(--radius);
+    padding: 2rem;
+    text-align: center;
+    margin-top: 1rem;
+  }
+  .error-screen.show { display: block; }
+
+  /* ── Loading overlay ── */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(26,26,46,0.5);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .loading-overlay.show { display: flex; }
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255,255,255,0.2);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  .loading-overlay p { color: white; font-size: 0.9rem; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Already signed screen ── */
+  .already-signed {
+    display: none;
+    background: var(--success-light);
+    border: 1px solid #9ee0bf;
+    border-radius: var(--radius);
+    padding: 2rem;
+    text-align: center;
+    margin-top: 1rem;
+  }
+  .already-signed.show { display: block; }
+
+  /* ── Invalid token screen ── */
+  .invalid-screen {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 3rem;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    padding: 2rem;
+    font-size: 0.72rem;
+    color: var(--ink-light);
+    border-top: 1px solid var(--border);
+    margin-top: 3rem;
+  }
+
+  @media print {
+    .site-header, footer, .submit-btn { display: none; }
+    .signoff-panel { box-shadow: none; border: 1px solid #ccc; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <span class="logo">Safe Systems of Work</span>
+  <span class="badge">Confidential</span>
+</header>
+
+<div id="loading-overlay" class="loading-overlay">
+  <div class="spinner"></div>
+  <p>Submitting your sign-off…</p>
+</div>
+
+<main class="page-wrap" id="main-content">
+
+  <!-- Invalid token fallback -->
+  <div id="invalid-screen" class="invalid-screen" style="display:none">
+    <h2 style="font-family:'DM Serif Display',serif;margin-bottom:0.5rem">Invalid Link</h2>
+    <p style="color:var(--ink-mid);font-size:0.9rem">This sign-off link is invalid or has expired. Please contact your manager to receive a new link.</p>
+  </div>
+
+  <!-- Main content (shown when token valid) -->
+  <div id="valid-content" style="display:none">
+
+    <!-- Doc meta -->
+    <div class="doc-meta">
+      <div>
+        <h1 class="doc-title" id="doc-title">Loading…</h1>
+        <div class="doc-chips">
+          <span class="chip dept" id="chip-dept"></span>
+          <span class="chip ver" id="chip-ver"></span>
+          <span class="chip" id="chip-date"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reading notice -->
+    <div class="read-notice">
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+      <span>You must <strong>read the full document</strong> below before the sign-off form will unlock. Scroll to the bottom to continue.</span>
+    </div>
+
+    <!-- Document viewer -->
+    <div class="doc-viewer-wrap">
+      <div class="doc-viewer" id="doc-viewer">
+        <!-- Document content injected here -->
+        <p style="color:var(--ink-light);text-align:center;padding:2rem">Loading document…</p>
+      </div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="scroll-progress-wrap">
+      <div class="scroll-progress-bar" id="progress-bar"></div>
+    </div>
+    <div class="scroll-label">Reading progress: <span id="progress-label">0%</span></div>
+
+    <!-- Sign-off panel -->
+    <div class="signoff-panel locked" id="signoff-panel">
+      <div class="signoff-panel-header">
+        <svg class="lock-icon" id="lock-icon" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+        <h3>Sign-off Declaration</h3>
+      </div>
+      <div class="signoff-body">
+
+        <div class="unlock-notice" id="unlock-notice">
+          ↑ Please scroll through the full document above to unlock this form
+        </div>
+
+        <!-- Pre-filled fields (read only) -->
+        <div class="form-grid">
+          <div class="field">
+            <label>Department</label>
+            <input type="text" id="field-dept" class="prefilled" readonly>
+          </div>
+          <div class="field">
+            <label>Document & Version</label>
+            <input type="text" id="field-docver" class="prefilled" readonly>
+          </div>
+        </div>
+
+        <!-- Declarations -->
+        <div class="declaration">
+          <div class="declaration-item">
+            <input type="checkbox" id="decl-read" required>
+            <label for="decl-read">I confirm that I have read and understood the full content of this Safe System of Work document.</label>
+          </div>
+          <div class="declaration-item">
+            <input type="checkbox" id="decl-comply" required>
+            <label for="decl-comply">I agree to comply with the requirements set out in this document as part of my duties.</label>
+          </div>
+          <div class="declaration-item">
+            <input type="checkbox" id="decl-questions" required>
+            <label for="decl-questions">I understand that if I have any questions or concerns I should raise them with my manager before beginning relevant work.</label>
+          </div>
+        </div>
+
+        <!-- Typed signature -->
+        <div class="signature-field">
+          <label style="display:block;font-size:0.75rem;font-weight:500;color:var(--ink-mid);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:5px">
+            Typed Signature — Type your full legal name to sign
+          </label>
+          <input type="text" class="signature-input" id="field-signature" placeholder="Type your full name here…" autocomplete="name" spellcheck="false">
+          <div class="field-error" id="sig-error">Please type your full name as your signature</div>
+          <div class="field-error" id="name-match-error">Signature must match the name on record for this link</div>
+          <p class="signature-hint">Your typed name constitutes a legally binding electronic signature under the Electronic Communications Act 2000.</p>
+        </div>
+
+        <button class="submit-btn" id="submit-btn" disabled onclick="submitSignoff()">
+          Submit Sign-off
+        </button>
+
+        <p class="privacy-notice">
+          Your name, email, IP address, and timestamp will be recorded for compliance purposes.<br>
+          This data is processed under legitimate interest / legal obligation (UK GDPR Art. 6(1)(c)/(f)).<br>
+          Data is stored in Microsoft 365 (UK data centre). <a href="#privacy">Privacy notice ↓</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- Success screen -->
+    <div class="success-screen" id="success-screen">
+      <div class="success-icon">
+        <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="#1a7a4a" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <h2>Sign-off Complete</h2>
+      <p>Thank you. Your sign-off has been recorded and a confirmation email has been sent to you.</p>
+      <p>Please keep this confirmation for your records.</p>
+      <div class="success-ref" id="success-ref"></div>
+    </div>
+
+    <!-- Error screen -->
+    <div class="error-screen" id="error-screen">
+      <h3 style="font-family:'DM Serif Display',serif;margin-bottom:0.5rem">Submission Failed</h3>
+      <p style="font-size:0.9rem;color:var(--ink-mid)">There was a problem recording your sign-off. Please try again or contact your manager.</p>
+      <p style="font-size:0.8rem;color:var(--ink-light);margin-top:0.5rem" id="error-detail"></p>
+      <button onclick="location.reload()" style="margin-top:1rem;padding:0.6rem 1.5rem;background:var(--ink);color:white;border:none;border-radius:var(--radius);cursor:pointer;font-family:'DM Sans',sans-serif">Try Again</button>
+    </div>
+
+    <!-- Already signed -->
+    <div class="already-signed" id="already-signed">
+      <h3 style="font-family:'DM Serif Display',serif;color:var(--success);margin-bottom:0.5rem">Already Signed</h3>
+      <p style="font-size:0.9rem;color:var(--ink-mid)">Our records show you have already signed off this version of the document. No further action is needed.</p>
+    </div>
+
+    <!-- Privacy notice anchor -->
+    <div id="privacy" style="margin-top:3rem;padding:1.5rem;background:var(--white);border:1px solid var(--border);border-radius:var(--radius);font-size:0.8rem;color:var(--ink-mid);line-height:1.8">
+      <strong style="color:var(--ink);display:block;margin-bottom:0.5rem">Privacy Notice — SSOW Sign-off System</strong>
+      This system collects your name, email address, IP address, browser information, and the date/time of sign-off.
+      This information is used solely to maintain a compliance record that you have read and agreed to your Safe System of Work document.
+      Data is stored in Microsoft 365 (UK South data centre) and retained for [YOUR RETENTION PERIOD, e.g. 7 years] in line with your organisation's data retention policy.
+      The lawful basis is legal obligation and legitimate interest (UK GDPR Article 6(1)(c) and 6(1)(f)).
+      This data is not shared with third parties. For data subject requests contact [YOUR DPO EMAIL].
+    </div>
+
+  </div><!-- /valid-content -->
+</main>
+
+<footer>
+  &copy; <span id="footer-year"></span> — SSOW Sign-off System &nbsp;|&nbsp; Hosted on GitHub Pages &nbsp;|&nbsp; Data stored in Microsoft 365 UK
+</footer>
+
+<script>
+// ════════════════════════════════════════════════
+// CONFIGURATION — edit these values
+// ════════════════════════════════════════════════
+const CONFIG = {
+  // Your Power Automate HTTP trigger URL (paste from your flow)
+  webhookUrl: 'YOUR_POWER_AUTOMATE_WEBHOOK_URL_HERE',
+
+  // Set to true once you connect Power Automate (false = demo mode)
+  liveMode: false,
+
+  // How far through the document (0–1) before sign-off unlocks
+  readThreshold: 0.92,
+
+  // Your company name
+  companyName: 'Your Company Name',
+};
+
+// ════════════════════════════════════════════════
+// URL PARAMETER PARSING
+// ════════════════════════════════════════════════
+const params = new URLSearchParams(window.location.search);
+const TOKEN   = params.get('token')   || '';
+const SSOW_ID = params.get('ssow')    || '';
+const VERSION = params.get('ver')     || '';
+const NAME    = params.get('name')    ? decodeURIComponent(params.get('name'))    : '';
+const EMAIL   = params.get('email')   ? decodeURIComponent(params.get('email'))   : '';
+const DEPT    = params.get('dept')    ? decodeURIComponent(params.get('dept'))    : '';
+const TITLE   = params.get('title')   ? decodeURIComponent(params.get('title'))   : '';
+const DOC_URL = params.get('docurl')  ? decodeURIComponent(params.get('docurl'))  : '';
+
+// ════════════════════════════════════════════════
+// DOCUMENT CONTENT
+// This section loads the SSOW content.
+// Option A (current): Content is passed via URL param 'content'
+// Option B: Fetch from SharePoint public link in DOC_URL
+// Option C: Embed content directly in the page per SSOW
+// ════════════════════════════════════════════════
+function loadDocument() {
+  const viewer = document.getElementById('doc-viewer');
+  
+  // If a SharePoint document URL is provided, show a framed link + embedded content
+  if (DOC_URL) {
+    viewer.innerHTML = `
+      <div style="background:var(--accent-light);border:1px solid #f0b0a8;border-radius:4px;padding:0.8rem 1rem;margin-bottom:1.5rem;font-size:0.82rem;color:var(--accent-dark)">
+        <strong>Important:</strong> Read the full document below before signing. You must scroll to the bottom.
+      </div>
+      ${getSSOWContent()}
+    `;
+  } else {
+    viewer.innerHTML = getSSOWContent();
+  }
+}
+
+// ════════════════════════════════════════════════
+// SSOW CONTENT FUNCTION
+// Replace the content inside getSSOWContent() with
+// your actual SSOW text, OR use the multi-document
+// approach in the README to load different content
+// per SSOW ID.
+// ════════════════════════════════════════════════
+function getSSOWContent() {
+  // Demo content — replace with your actual SSOW content
+  // For multiple SSOWs, use a switch(SSOW_ID) statement
+  const docs = {
+    'default': `
+      <h2>1. Purpose and Scope</h2>
+      <p>This Safe System of Work (SSOW) establishes the procedures and controls required to ensure the health and safety of all personnel involved in <strong id="title-inline">${TITLE || 'the specified activity'}</strong>. It applies to all staff in the <strong>${DEPT || 'relevant department'}</strong>.</p>
+      <p>This document must be read in full before commencing any activity covered by its scope. Failure to comply with these procedures may result in disciplinary action and could constitute a breach of health and safety legislation.</p>
+
+      <h2>2. Hazard Identification</h2>
+      <p>The following hazards have been identified in relation to this activity:</p>
+      <ul>
+        <li>Manual handling risks where heavy or awkward items are moved</li>
+        <li>Slip, trip and fall hazards in the working environment</li>
+        <li>Exposure to hazardous substances (refer to relevant COSHH assessment)</li>
+        <li>Working at height where applicable</li>
+        <li>Electrical hazards from equipment in use</li>
+      </ul>
+
+      <h2>3. Control Measures</h2>
+      <p>The following control measures must be implemented before and during the activity:</p>
+      <ul>
+        <li>Conduct a visual inspection of the work area prior to commencing</li>
+        <li>Ensure all required PPE is worn and in good condition</li>
+        <li>Confirm relevant risk assessments have been reviewed</li>
+        <li>Ensure all equipment has been inspected and is fit for purpose</li>
+        <li>Brief all team members on the hazards and controls before starting</li>
+        <li>Ensure emergency procedures and first aid arrangements are known</li>
+      </ul>
+
+      <h2>4. Personal Protective Equipment (PPE)</h2>
+      <p>The following PPE is mandatory for this activity. You must not commence work without it:</p>
+      <ul>
+        <li>Safety footwear (toe-capped, non-slip)</li>
+        <li>High-visibility vest or jacket where required</li>
+        <li>Gloves appropriate to the task</li>
+        <li>Eye protection where there is a risk of projectiles or splashing</li>
+        <li>Any additional PPE specified in the relevant risk assessment</li>
+      </ul>
+
+      <h2>5. Emergency Procedures</h2>
+      <p>In the event of an emergency, follow these steps without delay:</p>
+      <ul>
+        <li>Stop work immediately and make the area safe if it is safe to do so</li>
+        <li>Call 999 if there is immediate risk to life</li>
+        <li>Contact your line manager or the designated safety officer</li>
+        <li>Do not move injured persons unless there is immediate danger</li>
+        <li>Complete an incident report form as soon as practicable</li>
+      </ul>
+
+      <h2>6. Responsibilities</h2>
+      <p>All employees covered by this SSOW are responsible for:</p>
+      <ul>
+        <li>Reading and understanding this document before undertaking the activity</li>
+        <li>Following the procedures and control measures at all times</li>
+        <li>Reporting any concerns, near misses or incidents to their manager immediately</li>
+        <li>Not undertaking the activity if they believe it is unsafe to do so</li>
+        <li>Co-operating with management on all health and safety matters</li>
+      </ul>
+
+      <h2>7. Document Control</h2>
+      <p>This document is version <strong>${VERSION || '1.0'}</strong>. It will be reviewed annually or following any incident, change in legislation, or significant change to the activity or environment covered. All previous versions are superseded by this document.</p>
+      <p>Questions regarding this SSOW should be directed to your line manager or the Health &amp; Safety lead.</p>
+
+      <div class="doc-end-marker">— End of Document — Version ${VERSION || '1.0'} — You must scroll past this point to sign off —</div>
+    `
+  };
+  return docs[SSOW_ID] || docs['default'];
+}
+
+// ════════════════════════════════════════════════
+// INITIALISATION
+// ════════════════════════════════════════════════
+document.getElementById('footer-year').textContent = new Date().getFullYear();
+
+function init() {
+  // Validate minimum required params
+  if (!TOKEN || !SSOW_ID) {
+    document.getElementById('invalid-screen').style.display = 'block';
+    return;
+  }
+
+  // Show valid content
+  document.getElementById('valid-content').style.display = 'block';
+
+  // Populate meta
+  document.getElementById('doc-title').textContent  = TITLE || SSOW_ID;
+  document.getElementById('chip-dept').textContent  = DEPT  || 'All Staff';
+  document.getElementById('chip-ver').textContent   = 'v' + (VERSION || '1');
+  document.getElementById('chip-date').textContent  = new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'});
+  document.title = (TITLE || SSOW_ID) + ' — Sign-off';
+
+  // Populate form fields
+  document.getElementById('field-name').value   = NAME;
+  document.getElementById('field-email').value  = EMAIL;
+  document.getElementById('field-dept').value   = DEPT;
+  document.getElementById('field-docver').value = (TITLE || SSOW_ID) + ' — v' + (VERSION || '1');
+
+  // Load document content
+  loadDocument();
+
+  // Bind scroll listener
+  const viewer = document.getElementById('doc-viewer');
+  viewer.addEventListener('scroll', onDocScroll);
+
+  // Bind declaration checkboxes
+  ['decl-read','decl-comply','decl-questions'].forEach(id => {
+    document.getElementById(id).addEventListener('change', checkSubmitReady);
+  });
+  document.getElementById('field-signature').addEventListener('input', checkSubmitReady);
+}
+
+// ════════════════════════════════════════════════
+// SCROLL GATING
+// ════════════════════════════════════════════════
+let hasReadDocument = false;
+
+function onDocScroll() {
+  const viewer = document.getElementById('doc-viewer');
+  const scrolled = viewer.scrollTop;
+  const total = viewer.scrollHeight - viewer.clientHeight;
+  const pct = total > 0 ? Math.min(scrolled / total, 1) : 0;
+
+  // Update progress bar
+  const bar = document.getElementById('progress-bar');
+  bar.style.width = Math.round(pct * 100) + '%';
+  document.getElementById('progress-label').textContent = Math.round(pct * 100) + '%';
+
+  if (pct >= 1) bar.classList.add('complete');
+
+  // Unlock sign-off panel
+  if (pct >= CONFIG.readThreshold && !hasReadDocument) {
+    hasReadDocument = true;
+    unlockSignoff();
+  }
+}
+
+function unlockSignoff() {
+  const panel = document.getElementById('signoff-panel');
+  const notice = document.getElementById('unlock-notice');
+  const lockIcon = document.getElementById('lock-icon');
+  
+  panel.classList.remove('locked');
+  notice.classList.add('hidden');
+  lockIcon.classList.add('unlocked');
+  lockIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/>';
+
+  // Smooth scroll to sign-off
+  setTimeout(() => {
+    document.getElementById('signoff-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 300);
+
+  checkSubmitReady();
+}
+
+// ════════════════════════════════════════════════
+// FORM VALIDATION
+// ════════════════════════════════════════════════
+function checkSubmitReady() {
+  if (!hasReadDocument) return;
+  
+  const decls = ['decl-read','decl-comply','decl-questions'].every(id => document.getElementById(id).checked);
+  const sig = document.getElementById('field-signature').value.trim().length > 2;
+  
+  document.getElementById('submit-btn').disabled = !(decls && sig);
+}
+
+// ════════════════════════════════════════════════
+// SUBMISSION
+// ════════════════════════════════════════════════
+async function submitSignoff() {
+  // Validate signature
+  const sig = document.getElementById('field-signature').value.trim();
+  if (sig.length < 3) {
+    document.getElementById('sig-error').classList.add('show');
+    document.getElementById('field-signature').focus();
+    return;
+  }
+  document.getElementById('sig-error').classList.remove('show');
+  document.getElementById('name-match-error').classList.remove('show');
+
+  const now = new Date();
+  const payload = {
+    token:       TOKEN,
+    ssowId:      SSOW_ID,
+    ssowTitle:   TITLE || SSOW_ID,
+    version:     VERSION || '1',
+    department:  DEPT,
+    staffName:   NAME,
+    staffEmail:  EMAIL,
+    signature:   sig,
+    signedAt:    now.toISOString(),
+    signedAtUK:  now.toLocaleString('en-GB', { timeZone: 'Europe/London' }),
+    declarations: {
+      hasRead:      document.getElementById('decl-read').checked,
+      willComply:   document.getElementById('decl-comply').checked,
+      hasQuestions: document.getElementById('decl-questions').checked,
+    },
+    userAgent:   navigator.userAgent,
+    // Note: IP address is captured server-side by Power Automate from request headers
+  };
+
+  // Show loading
+  document.getElementById('loading-overlay').classList.add('show');
+  document.getElementById('submit-btn').disabled = true;
+
+  if (!CONFIG.liveMode) {
+    // Demo mode — simulate success after 1.5s
+    await new Promise(r => setTimeout(r, 1500));
+    document.getElementById('loading-overlay').classList.remove('show');
+    showSuccess(payload, now);
+    return;
+  }
+
+  try {
+    const response = await fetch(CONFIG.webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    document.getElementById('loading-overlay').classList.remove('show');
+
+    if (response.ok || response.status === 202) {
+      showSuccess(payload, now);
+    } else if (response.status === 409) {
+      // Already signed
+      document.getElementById('signoff-panel').style.display = 'none';
+      document.getElementById('already-signed').classList.add('show');
+    } else {
+      throw new Error('HTTP ' + response.status);
+    }
+  } catch (err) {
+    document.getElementById('loading-overlay').classList.remove('show');
+    document.getElementById('error-detail').textContent = err.message;
+    document.getElementById('error-screen').classList.add('show');
+    document.getElementById('submit-btn').disabled = false;
+  }
+}
+
+function showSuccess(payload, now) {
+  document.getElementById('doc-viewer-wrap') && (document.querySelector('.doc-viewer-wrap').style.display = 'none');
+  document.querySelector('.scroll-progress-wrap').style.display = 'none';
+  document.querySelector('.scroll-label').style.display = 'none';
+  document.querySelector('.read-notice').style.display = 'none';
+  document.getElementById('signoff-panel').style.display = 'none';
+
+  const ref = `SSOW: ${payload.ssowTitle} | Version: ${payload.version} | Signed by: ${payload.signature} | ${payload.signedAtUK}`;
+  document.getElementById('success-ref').innerHTML = '<strong>Audit reference:</strong><br>' + ref;
+  document.getElementById('success-screen').classList.add('show');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ════════════════════════════════════════════════
+// START
+// ════════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
