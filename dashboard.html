@@ -373,19 +373,21 @@ async function loadData() {
     }
 
     // Load all three lists in parallel using IDs
-    const [ssowRes, staffRes, auditRes] = await Promise.all([
-      fetch(`${baseUrl}/${ssowList.id}/items?$expand=fields&$top=500`, { headers }),
-      fetch(`${baseUrl}/${staffList.id}/items?$expand=fields&$top=500`, { headers }),
-      fetch(`${baseUrl}/${auditList.id}/items?$expand=fields&$top=500`, { headers }),
-    ]);
+    async function fetchAllItems(listId) {
+  let url = `${baseUrl}/${listId}/items?$expand=fields&$top=999`;
+  let all = [];
+  while (url) {
+    const res = await fetch(url, { headers });
+    const json = await res.json();
+    all = all.concat(json.value || []);
+    url = json['@odata.nextLink'] || null;
+  }
+  return all;
+}
 
-    const [ssowJson, staffJson, auditJson] = await Promise.all([
-      ssowRes.json(), staffRes.json(), auditRes.json()
-    ]);
-
-    SSOW_DATA  = ssowJson.value  || [];
-    STAFF_DATA = staffJson.value || [];
-    AUDIT_DATA = auditJson.value || [];
+SSOW_DATA  = await fetchAllItems(ssowList.id);
+STAFF_DATA = await fetchAllItems(staffList.id);
+AUDIT_DATA = await fetchAllItems(auditList.id);
 
     document.getElementById('refresh-time').textContent = new Date().toLocaleTimeString('en-GB');
     populateFilters();
