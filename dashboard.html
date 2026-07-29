@@ -470,7 +470,7 @@ function renderDashboard() {
     // Match audit records
     const staffWithStatus = deptStaff.map(s => {
       const auditRecord = AUDIT_DATA.find(a =>
-        a.fields?.StaffEmail?.toLowerCase() === s.fields?.Email?.toLowerCase() &&
+        a.fields?.StaffEmail?.trim().toLowerCase() === s.fields?.Email?.trim().toLowerCase() &&
         a.fields?.SSOW_ID === f.SSOW_ID &&
         String(a.fields?.SSOW_Version) === String(f.SSOW_Version) &&
         a.fields?.SignedAtUK
@@ -611,7 +611,7 @@ function exportCSV() {
     });
     deptStaff.forEach(s => {
       const audit = AUDIT_DATA.find(a =>
-        a.fields?.StaffEmail?.toLowerCase() === s.fields?.Email?.toLowerCase() &&
+        a.fields?.StaffEmail?.trim().toLowerCase() === s.fields?.Email?.trim().toLowerCase() &&
         a.fields?.SSOW_ID === f.SSOW_ID &&
         a.fields?.SignedAtUK
       );
@@ -655,7 +655,7 @@ function exportSSOWCSV(ssowId, title) {
       else if (typeof dept === 'object' && dept?.Value) deptStr = dept.Value;
       else deptStr = dept || '';
       const audit = AUDIT_DATA.find(a =>
-        a.fields?.StaffEmail?.toLowerCase() === s.fields?.Email?.toLowerCase() &&
+        a.fields?.StaffEmail?.trim().toLowerCase() === s.fields?.Email?.trim().toLowerCase() &&
         a.fields?.SSOW_ID === ssowId &&
         String(a.fields?.SSOW_Version) === String(f.SSOW_Version) &&
         a.fields?.SignedAtUK
